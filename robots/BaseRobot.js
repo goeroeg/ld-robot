@@ -2,8 +2,22 @@ import { LDrawLoader } from '../gfx/LDrawLoader.js'; // use fixed -
 
 export class BaseRobot {
     constructor() {
-        this.description = "Abstract Robot";         
+        this.description = "Abstract Robot";
+        this.joints = [];
+        this.jointAxis = [];
+        this.axisLimits = [];
+        this.jointLimits = [];
+        this.axisVel = [];
+        this.jointVel = [];
+        this.axisAcc = [];
+        this.jointAcc = [];
+    }    
+
+    get numJoints() {
+        return this.joints.length;
     }
+
+    updateJoints() { }
 
     load( modelFilename, onLoad, onProgress, onError ) {
         this.filename = modelFilename;      
@@ -16,7 +30,7 @@ export class BaseRobot {
 
                 //console.log(model);
 
-                // Convert from LDraw coordinates: rotate 90 degrees around X
+                // Convert from LDraw coordinates: rotate -90 degrees around X
                 model.rotateX(-Math.PI/2);
 
                 // Adjust materials
@@ -29,6 +43,8 @@ export class BaseRobot {
                         c.receiveShadow = true; 
                     }
                 }, onProgress, onError);
+
+                self.model = model;
 
                 if (onLoad) onLoad(model);
             });            

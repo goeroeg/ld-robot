@@ -21,32 +21,80 @@ export class Robot6Axis extends BaseRobot {
 
     constructor() {
         super();
-        this.joints = [];
         for (let idx = 0; idx < 6; idx++) {
             this.joints.push(new THREE.Group());
+            this.axisLimits.push({min:-180, max:180}); // limits in °
+            this.jointLimits.push({min:-Math.PI, max:Math.PI}); // limits in rad
+            this.axisVel.push(160); // default velocity in °/s, override by settings later
+            this.jointVel.push(160 / 180 * Math.PI); // default velocity in rad/s, override by settings later
+            this.axisAcc.push(600); // default acceleration in °/s², override by settings later
+            this.jointAcc.push(600 / 180 * Math.PI); // default acceleration in °/s², override by settings later
         }
+        this.jointAxis = ['z', 'x', 'x', 'y', 'x', 'y'];
+        
     }
 
+    get joint1() {
+        return this.joints[0].rotation.z;
+    }
+
+    /**
+     * @param {number} value
+     */
     set joint1(value) {
         this.joints[0].rotation.z = value;
     }
 
+    get joint2() {
+        return this.joints[1].rotation.x;
+    }
+
+    /**
+     * @param {number} value
+     */
     set joint2(value) {
         this.joints[1].rotation.x = value;
     }
 
+    get joint3() {
+        return this.joints[2].rotation.x;
+    }
+
+    /**
+     * @param {number} value
+     */
     set joint3(value) {
         this.joints[2].rotation.x = value;
     }
 
+    get joint4() {
+        return this.joints[3].rotation.y;
+    }
+
+    /**
+     * @param {number} value
+     */
     set joint4(value) {
         this.joints[3].rotation.y = value;
     }
 
+    get joint5() {
+        return this.joints[4].rotation.x;
+    }
+
+    /**
+     * @param {number} value
+     */
     set joint5(value) {
         this.joints[4].rotation.x = value;
     }
 
+    get joint6() {
+        return this.joints[5].rotation.y;
+    }
+    /**
+     * @param {number} value
+     */
     set joint6(value) {
         this.joints[5].rotation.y = value;
     }
@@ -134,7 +182,9 @@ export class Robot6Axis extends BaseRobot {
             parts[RobotParts.Joint6].add(tempGroup);
             tempGroup.attach(parts[RobotParts.Flange]);
 
-            console.log(robot);
+            // console.log(robot);
+
+            self.model = robot;
 
             if (onLoad) onLoad(robot);
         } , onProgress, onError);

@@ -20,27 +20,32 @@ export class Robot6AxisBal extends Robot6Axis {
         this.jointAngleOffset = 0;
         this.baseAngleOffset = 0;
         this.baseOffset = new THREE.Vector3();
-
     }
 
-    set joint2 (value) {
-        super.joint2 = value;
+    updateJoints() {
         // set balJoint[0] and balJoint[1]
-        let balVec = new THREE.Vector3(0, Math.cos(value + this.angleOffset) * this.radius, Math.sin(value + this.angleOffset) * this.radius);
 
-        // let balVec = new THREE.Vector3(0, Math.sin(-value) * this.radius, Math.cos(-value) * this.radius);
+        let joint2value = this.joints[1].rotation.x;
 
-        console.log(balVec);
-
+        let balVec = new THREE.Vector3(0, Math.cos(joint2value + this.angleOffset) * this.radius, Math.sin(joint2value + this.angleOffset) * this.radius);
+        // console.log(balVec);
         balVec = balVec.sub(this.baseOffset);
 
         let angle = Math.atan(balVec.z / balVec.y);
 
-        console.log(angle);
-        console.log(this.angleOffset);
-
         this.balJoints[0].rotation.x = angle - this.baseAngleOffset;
-        this.balJoints[1].rotation.x = this.angleOffset - value + this.jointAngleOffset + Math.PI/2 + angle;
+        this.balJoints[1].rotation.x = this.angleOffset - joint2value + this.jointAngleOffset + Math.PI/2 + angle;
+    }
+
+    get joint2() {
+        return super.joint2;
+    }
+    /**
+     * @param {number} value
+     */
+    set joint2 (value) {
+        super.joint2 = value;        
+        this.updateJoints();
     }
 
     load(modelFilename, onLoad, onProgress, onError) {
@@ -70,14 +75,14 @@ export class Robot6AxisBal extends Robot6Axis {
             self.radius = vec.length();
 
             let yAx = new THREE.Vector3(0, 1, 0);
-            let xAx = new THREE.Vector3(1, 0, 0);
+            let xAx = new THREE.Vector3(1, 0, 0); // needed to determine sign of angle
 
             self.angleOffset = vec.angleTo(yAx) * Math.sign(xAx.dot(yAx.cross(vec)));
             
-            console.log(vec);
-            console.log(self.angleOffset);            
-            vec = new THREE.Vector3(0, Math.cos(self.angleOffset) * self.radius, Math.sin(self.angleOffset) * self.radius); // check angle
-            console.log(vec);
+            // console.log(vec);
+            // console.log(self.angleOffset);            
+            // vec = new THREE.Vector3(0, Math.cos(self.angleOffset) * self.radius, Math.sin(self.angleOffset) * self.radius); // check angle
+            // console.log(vec);
 
             self.baseAngleOffset = balBase.children[0].rotation.x;
             self.jointAngleOffset = balJoint.children[0].rotation.x;
