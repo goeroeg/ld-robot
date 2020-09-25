@@ -1,7 +1,7 @@
 //import * as THREE from './node_modules/three/build/three.module.js';
-import { GUI } from './node_modules/three/examples/jsm/libs/dat.gui.module.js';
+import { GUI } from './web_modules/three/examples/jsm/libs/dat.gui.module.js';
 
-import { MapControls } from './node_modules/three/examples/jsm/controls/OrbitControls.js';
+import { MapControls } from './web_modules/three/examples/jsm/controls/OrbitControls.js';
 import { Robot6AxisBal } from './robots/Robot6AxisBal.js';
 import { MotionExecutor } from './robots/MotionExecution.js';
 

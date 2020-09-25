@@ -1,6 +1,6 @@
 import { BaseRobot } from './BaseRobot.js';
 
-import { Kinematics } from '../web_modules/kinematics/dist/kinematics.js';
+// import { Kinematics } from '../web_modules/kinematics/dist/kinematics.js';
 
 const RobotParts = { 
     Base:   0, 
