@@ -1,9 +1,9 @@
 
 
 export class MotionExecutor {
-    constructor(robot, scene) {
+    constructor(robot) {
         this.robot = robot;
-        this.mixer = new THREE.AnimationMixer(scene);
+        this.mixer = new THREE.AnimationMixer();
         this.clock = new THREE.Clock(true);
 
         this.history = [[], [], [], [], []]; // 0 curr pos, 1 last pos, 2 curr vel, 3 last vel, 4 curr acc        

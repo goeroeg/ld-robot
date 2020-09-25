@@ -10,6 +10,9 @@ var gui;
 var robot;
 var executor;
 
+var axesHelperSize = 50;
+var oAxesHelper;
+
 var currentPose = {A1:0, A2:0, A3:0, A4:0, A5:0, A6:0 };
 var targetPose = {A1:0, A2:0, A3:0, A4:0, A5:0, A6:0 };
 
@@ -32,7 +35,8 @@ function initControls() {
 
     camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 5000 );
     camera.up = new THREE.Vector3(0, 0, 1);
-    camera.position.set(0, -400, 300 );
+    camera.position.set(0, -300, 400 );
+
 
     // controls
     controls = new MapControls( camera, renderer.domElement );    
@@ -42,7 +46,8 @@ function initControls() {
     controls.screenSpacePanning = true;
     controls.minDistance = 100;
     controls.maxDistance = 2500;
-    controls.maxPolarAngle = Math.PI / 2;
+    //controls.maxPolarAngle = Math.PI / 2;
+    
 
     //
     window.addEventListener( 'resize', onWindowResize, false );
@@ -51,10 +56,10 @@ function initControls() {
 function initScene() {
 
     scene = new THREE.Scene();
-    scene.background = new THREE.Color( 0x000000 );
+    scene.background = new THREE.Color( 0xaaaaff );
 
     // lights
-    var light = new THREE.DirectionalLight( 0xcccccc );
+    var light = new THREE.DirectionalLight( 0xaaaaaa );
     light.position.set(100, 100, 500);
 
     scene.add(light);
@@ -62,10 +67,51 @@ function initScene() {
     var light = new THREE.AmbientLight( 0xaaaaaa );
     scene.add(light);
 
+    oAxesHelper = new THREE.AxesHelper(axesHelperSize);
+    //scene.add(oAxesHelper);
+
     robot = new Robot6AxisBal();
     robot.load("robot.ldr_Packed.mpd", function ( model ) {
+
+    //robot = new Robot6AxisBal();
+    //robot.load("robot_small.ldr_Packed.mpd", function ( model ) {
         scene.add(model);
-        executor = new MotionExecutor(robot, scene);
+        executor = new MotionExecutor(robot);
+
+        for (let idx = 0; idx < 6; idx++) {
+            //robot.joints[idx].add(new THREE.AxesHelper(axesHelperSize));
+        }
+
+        console.log(robot.joints[5].getWorldPosition());
+        
+
+        //robot.Flange.add(new THREE.AxesHelper(axesHelperSize));
+        //robot.Tool.add(new THREE.AxesHelper(axesHelperSize));
+
+        let arr = robot.kinematics.forward(0,0,0,0,0,0)[5];
+        console.log(arr);
+
+        let base = robot.joints[0].position;
+
+        //let rot = new THREE.Euler(arr[3], arr[4], arr[5], 'XYZ');
+        
+
+        let helper = new THREE.AxesHelper(axesHelperSize * 2);
+        helper.position.x =  arr[0];
+        helper.position.y =  arr[1];
+        helper.position.z =  arr[2];
+        helper.rotation.x = arr[3];
+        helper.rotation.y = arr[4];
+        helper.rotation.z = arr[5];
+         //setFromQuaternion(new THREE.Quaternion().setFromEuler(rot));
+
+        let hgroup = new THREE.Group();
+        hgroup.add(helper);        
+        hgroup.translateX(base.x);
+        hgroup.translateY(base.y);
+        hgroup.translateZ(base.z);
+        hgroup.rotateX(Math.PI/2);
+        scene.add(hgroup);
     });
 }
 

@@ -1,5 +1,7 @@
 import { BaseRobot } from './BaseRobot.js';
 
+import { Kinematics } from '../web_modules/kinematics/dist/kinematics.js';
+
 const RobotParts = { 
     Base:   0, 
     Joint1: 1,
@@ -30,73 +32,81 @@ export class Robot6Axis extends BaseRobot {
             this.axisAcc.push(600); // default acceleration in °/s², override by settings later
             this.jointAcc.push(600 / 180 * Math.PI); // default acceleration in °/s², override by settings later
         }
-        this.jointAxis = ['z', 'x', 'x', 'y', 'x', 'y'];
+        this.jointAxis = ['z', 'y', 'y', 'x', 'y', 'x'];
         
     }
 
+    getJointValue(idx) {
+        return this.joints[idx].rotation[this.jointAxis[idx]];
+    }
+
+    setJointValue(idx, value) {
+        this.joints[idx].rotation[this.jointAxis[idx]] = value;
+    }
+
     get joint1() {
-        return this.joints[0].rotation.z;
+        return this.getJointValue(0);
     }
 
     /**
      * @param {number} value
      */
     set joint1(value) {
-        this.joints[0].rotation.z = value;
+        this.setJointValue(0, value);
     }
 
     get joint2() {
-        return this.joints[1].rotation.x;
+        return this.getJointValue(1);
     }
 
     /**
      * @param {number} value
      */
     set joint2(value) {
-        this.joints[1].rotation.x = value;
+        this.setJointValue(1, value);
     }
 
     get joint3() {
-        return this.joints[2].rotation.x;
+        return this.getJointValue(2);
     }
 
     /**
      * @param {number} value
      */
     set joint3(value) {
-        this.joints[2].rotation.x = value;
+        this.setJointValue(2, value);
     }
 
     get joint4() {
-        return this.joints[3].rotation.y;
+        return this.getJointValue(3);
     }
 
     /**
      * @param {number} value
      */
     set joint4(value) {
-        this.joints[3].rotation.y = value;
+        this.setJointValue(3, value);
     }
 
     get joint5() {
-        return this.joints[4].rotation.x;
+        return this.getJointValue(4);
     }
 
     /**
      * @param {number} value
      */
     set joint5(value) {
-        this.joints[4].rotation.x = value;
+        this.setJointValue(4, value);
     }
 
     get joint6() {
-        return this.joints[5].rotation.y;
+        return this.getJointValue(5);
     }
     /**
      * @param {number} value
      */
     set joint6(value) {
-        this.joints[5].rotation.y = value;
+        this.setJointValue(5, value);
     }
 
     load(modelFilename, onLoad, onProgress, onError) {
@@ -149,18 +159,19 @@ export class Robot6Axis extends BaseRobot {
             let tempGroup = self.joints[0];
             tempGroup.name = "Joint1";
             tempGroup.position.copy(parts[RobotParts.Joint1].children[0].position);
-            parts[RobotParts.Joint1].attach(tempGroup);
+            parts[RobotParts.Joint1].add(tempGroup);
             tempGroup.attach(parts[RobotParts.Link1]);
             
             tempGroup = self.joints[1];
             tempGroup.name = "Joint2";
-            tempGroup.position.copy(parts[RobotParts.Joint2].children[0].position);
-            parts[RobotParts.Joint2].attach(tempGroup);
+            tempGroup.position.copy(parts[RobotParts.Joint2].children[0].position);            
+            parts[RobotParts.Joint2].add(tempGroup);
             tempGroup.attach(parts[RobotParts.Link2]);
 
             tempGroup = self.joints[2];
-            tempGroup.name = "Joint3";
+            tempGroup.name = "Joint3";            
             tempGroup.position.copy(parts[RobotParts.Joint3].children[0].position);
+            //tempGroup.rotateY(Math.PI/2);
             parts[RobotParts.Joint3].add(tempGroup);
             tempGroup.attach(parts[RobotParts.Link3]);
 
@@ -173,20 +184,70 @@ export class Robot6Axis extends BaseRobot {
             tempGroup = self.joints[4];
             tempGroup.name = "Joint5";
             tempGroup.position.copy(parts[RobotParts.Joint5].children[0].position);
+            //tempGroup.rotateY(Math.PI/2);
             parts[RobotParts.Joint5].add(tempGroup);
             tempGroup.attach(parts[RobotParts.Link5]);
-
+            
             tempGroup = self.joints[5];
-            tempGroup.name = "Joint6";
-            tempGroup.position.copy(parts[RobotParts.Joint6].children[0].position);
-            parts[RobotParts.Joint6].add(tempGroup);
-            tempGroup.attach(parts[RobotParts.Flange]);
+            tempGroup.name = "Joint6";            
+            tempGroup.position.copy(parts[RobotParts.Joint6].children[0].position);            
+            //tempGroup.rotateY(Math.PI);
+            //tempGroup.rotateZ(Math.PI);
+            
+            parts[RobotParts.Joint6].add(tempGroup);         
+
+            let flangeGroup = new THREE.Group();
+            flangeGroup.name = "Flange";
+            flangeGroup.position.copy(parts[RobotParts.Flange].children[0].position);            
+            //flangeGroup.rotateY(Math.PI);
+            //flangeGroup.rotateZ(-Math.PI);
+
+            tempGroup.attach(flangeGroup);
+            flangeGroup.attach(parts[RobotParts.Flange]); 
+            self.Flange = flangeGroup;
+
+            let toolGroup = new THREE.Group();
+            toolGroup.name = "Tool";
+            toolGroup.position.copy(parts[RobotParts.Tool].children[0].position);
+            toolGroup.rotateY(Math.PI);
+            //toolGroup.rotateZ(Math.PI);
+            flangeGroup.attach(toolGroup);
+            toolGroup.attach(parts[RobotParts.Flange]); 
+            self.Tool = toolGroup;
 
             // console.log(robot);
 
             self.model = robot;
 
+            let geometry = [];
+            for (let idx = 1; idx < self.joints.length; idx++) {
+                let v = new THREE.Vector3().subVectors(self.joints[idx].position, self.joints[idx-1].position);            
+                geometry.push([v.x, v.z, -v.y]);
+            }
+            // IMPORTANT: make sure in the model the axes 4 and 6 have the same y coordinates - even if its not 100% accurate built
+            geometry[3][2] = 0;
+            geometry[4][2] = 0;
+
+            // console.log(geometry);
+
+            //self.kinematics = new Kinematics(geometry);
+            
+
             if (onLoad) onLoad(robot);
         } , onProgress, onError);
     }
+
+    inverse(position, orientation) {
+        let result = [];
+        if (this.kinematics) {
+            result = this.kinematics.inverse(position.x, position.z, -position.y, orientation.x, orientation.z, -orientation.y);
+        }
+        return result;
+    }
 }
+
+function exchangeYZ(vector) {
+    // change y and z
+    return new THREE.Vector3(vector.x, vector.z, vector.y);     
+}
+
